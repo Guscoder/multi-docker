@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t guscoder/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+  - docker build -t guscoder/multi-client ./client
+  - docker build -t guscoder/multi-nginx ./nginx
+  - docker build -t guscoder/multi-server ./server
+  - docker build -t guscoder/multi-worker ./worker
+  # login to Docker CLI
+  -echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # take those images and push them to docker hub
+  - docker push guscoder/multi-client
+  - docker push guscoder/multi-nginx
+  - docker push guscoder/multi-server
+  - docker push guscoder/multi-worker
+
